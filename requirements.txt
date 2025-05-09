@@ -1,0 +1,9 @@
+tf-nightly  # No warnings! (otherwise tensorflow[and-cuda])
+pandas
+polars
+matplotlib
+plotly
+ipykernel
+pillow
+PyQt5
+Flask
