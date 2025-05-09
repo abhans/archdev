@@ -29,8 +29,8 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     python-pip python-virtualenv \
     neofetch \
     # NVIDIA Drivers & CUDA
-    nvidia nvidia-utils nvidia-settings nvidia-container-toolkit \
-    cuda cudnn cuda-tools && \
+    nvidia nvidia-utils nvidia-settings nvidia-container-toolkit && \
+    # cuda cudnn cuda-tools && \
     # Cleanup
     pacman -Scc --noconfirm && \
     rm -rf /var/cache/pacman/pkg/*
@@ -56,10 +56,12 @@ RUN git clone https://aur.archlinux.org/yay.git /tmp/yay && \
 WORKDIR ${HOME}
 
 # Installing PyPI packages
-COPY ["requirements.txt", "run.py", "${HOME}/"]
+COPY requirements.txt run.py ${HOME}/
 
 RUN source ${ENV_DIR}/bin/activate && \
     pip3 install --upgrade pip && \
+    # Download PyTorch
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 && \
     # python3 -m pip install 'tensorflow[and-cuda]' && \
     pip3 install --no-cache-dir -r /requirements.txt && \
     # Fetching System information at shell startup
