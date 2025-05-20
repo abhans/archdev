@@ -1,74 +1,56 @@
-# TODO: Arch Linux Development Environment
-#   - Neofetch (at the start of each bash session)
-#   - Tensorflow & CUDA
-#   - NVIDIA Drivers
-#   - Python and C++ support
-
-# Base Image
 FROM archlinux:latest
 
-# Build Arguments
+# Select the ROOT user
+USER root
+
+# Initialize Arch Linux
+RUN pacman-key --init \
+    && pacman-key --populate archlinux \
+    && pacman --noconfirm -Syu
+
+# Install essentials and "uv" package manager
+RUN pacman -Sy --noconfirm unzip sudo curl git vi nvim \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Build arguments for the user
 ARG USER=abhans
 ARG GUID=1000
 ARG UID=${GUID}
 ENV HOME=/home/${USER}
-ENV ENV_DIR=${HOME}/.venv
-ENV CUDA_VISIBLE_DEVICES=0
+ENV VENV_DIR=${HOME}/.venv
 
-# Switch to root if it's not already
-USER root
+# Install CUDA & Drivers
+RUN pacman -Syy --noconfirm \
+    && yes | pacman -S --noconfirm nvidia cuda cuda-toolkit \
+    && pacman -S --noconfirm nvidia-container-toolkit docker \
+    && pacman -Sy neofetch \
+    && pacman -Scc --noconfirm
 
-# Populating Signature Keys
-RUN pacman-key --init && \
-    pacman-key --populate archlinux
-
-# System Updates
-RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Syu --noconfirm --needed base-devel sudo git \
-    # Python Installation
-    python-pip python-virtualenv \
-    neofetch \
-    # NVIDIA Drivers & CUDA
-    nvidia nvidia-utils nvidia-settings nvidia-container-toolkit && \
-    # cuda cudnn cuda-tools && \
-    # Cleanup
-    pacman -Scc --noconfirm && \
-    rm -rf /var/cache/pacman/pkg/*
-
-# Configuring groups and users
-RUN useradd --create-home --shell /bin/bash ${USER} && \
-    usermod -aG wheel ${USER} && \
+# Create a new user
+RUN useradd --create-home --shell /bin/bash ${USER} \
+    && usermod -aG wheel ${USER} \
+    echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
     # Setting the user as a "sudoer"
-    sed -i 's/^# %wheel/%wheel/' /etc/sudoers
+    && sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 
-# Installing AUR helper (yay) and Python 3.11
-USER ${USER}
+# Install Python 3.12 and create a virtual environment
+RUN uv python install 3.12 \
+    && uv venv ${VENV_DIR}
 
-RUN git clone https://aur.archlinux.org/yay.git /tmp/yay && \
-    cd /tmp/yay && \
-    makepkg -si --noconfirm && \
-    yay -S --noconfirm python311 && \
-    # Cleanup
-    rm -rf /tmp/yay && \
-    # Creating virtual environment with Python 3.11
-    /usr/bin/python3.11 -m venv ${ENV_DIR}
+WORKDIR ${HOME}/dev
 
-WORKDIR ${HOME}
+COPY requirements.txt requirements.txt
+ADD ./* ${HOME}/dev/
 
-# Installing PyPI packages
-COPY requirements.txt run.py ${HOME}/
+RUN source ${VENV_DIR}/bin/activate \
+    && uv pip install --upgrade pip \
+    && uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
+    && uv pip install --no-cache-dir -r /requirements.txt
 
-RUN source ${ENV_DIR}/bin/activate && \
-    pip3 install --upgrade pip && \
-    # Download PyTorch
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 && \
-    # python3 -m pip install 'tensorflow[and-cuda]' && \
-    pip3 install --no-cache-dir -r /requirements.txt && \
-    # Fetching System information at shell startup
-    echo "neofetch" >> /home/${USER}/.bashrc
+# Fetching System information at shel lstartup
+RUN echo "neofetch" >> /home/${USER}/.bashrc
 
-# Entrypoint
 COPY entrypoint.sh /entrypoint.sh
-RUN sudo chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

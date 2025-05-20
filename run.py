@@ -9,7 +9,7 @@ logging.basicConfig(
     format=">>> %(asctime)s | %(msg)s -> %(name)s @ %(filename)s",
     datefmt="%H:%M:%S",
     level=logging.INFO,
-    handlers=[ logging.StreamHandler(), logging.FileHandler(LOG, encoding='utf-8') ]
+    handlers=[logging.StreamHandler(), logging.FileHandler(LOG, encoding='utf-8')]
 )
 
 def checkCUDA() -> None:
