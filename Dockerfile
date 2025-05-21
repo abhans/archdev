@@ -22,13 +22,14 @@ ENV VENV_DIR=${HOME}/.venv
 # Install CUDA & Drivers
 RUN pacman -Syy --noconfirm \
     && yes | pacman -S --noconfirm nvidia cuda cuda-toolkit \
-    && pacman -S --noconfirm nvidia-container-toolkit docker \
+    && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
     && pacman -Sy neofetch \
     && pacman -Scc --noconfirm \
     && pacman -Syu --noconfirm
 
-# Add the CUDA folders to the PATH  
+# Add the CUDA folders to the PATH
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
+ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 
 # Create a new user
 RUN useradd --create-home --shell /bin/bash ${USER} \
