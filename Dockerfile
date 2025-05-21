@@ -24,7 +24,11 @@ RUN pacman -Syy --noconfirm \
     && yes | pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -S --noconfirm nvidia-container-toolkit docker \
     && pacman -Sy neofetch \
-    && pacman -Scc --noconfirm
+    && pacman -Scc --noconfirm \
+    && pacman -Syu --noconfirm
+
+# Add the CUDA folders to the PATH  
+ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 
 # Create a new user
 RUN useradd --create-home --shell /bin/bash ${USER} \
@@ -37,15 +41,15 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
 RUN uv python install 3.12 \
     && uv venv ${VENV_DIR}
 
-WORKDIR ${HOME}/dev
+# Add directory to the machine
+COPY . ${HOME}/dev/
 
-COPY requirements.txt requirements.txt
-ADD ./* ${HOME}/dev/
+WORKDIR ${HOME}/dev
 
 RUN source ${VENV_DIR}/bin/activate \
     && uv pip install --upgrade pip \
     && uv pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
-    && uv pip install --no-cache-dir -r /requirements.txt
+    && uv pip install --no-cache-dir -r requirements.txt
 
 # Fetching System information at shel lstartup
 RUN echo "neofetch" >> /home/${USER}/.bashrc
