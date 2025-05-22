@@ -42,8 +42,8 @@ RUN uv python install 3.12 \
 # Install CUDA & Drivers
 RUN pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
-    && pacman -Scc --noconfirm \
-    && pacman -Syu --noconfirm
+    && pacman -Syu --noconfirm \
+    && pacman -Scc --noconfirm
 
 RUN pacman -S --noconfirm fastfetch
 
@@ -51,27 +51,31 @@ RUN pacman -S --noconfirm fastfetch
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 
-# Fix permissions for the .venv directory
-RUN chown -R ${USER}:${USER} ${VENV_DIR}
-# Fix permissions for the cache directory
-RUN chown -R ${USER}:${USER} /home/${USER}/.cache || true
+# Fix permissions for the .venv and cache directories
+RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
 
 # Copy entrypoint bash script & change it to executable
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Change to user
-USER ${USER}
-
-# Add directory to the machine
+# Copy project files and fix permissions
 COPY . ${HOME}/dev/
+
+# Fix permissions for the working directory
+RUN chown -R ${USER}:${USER} ${HOME}/dev/
+# Switch to user
+USER ${USER}
 
 WORKDIR ${HOME}/dev
 
 RUN source ${VENV_DIR}/bin/activate \
     && uv pip install --upgrade pip \
     && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
-    && uv pip install --no-cache-dir -r requirements.txt
+    && uv pip install --no-cache-dir -r requirements.txt \
+    # Save the installed packages to a lock file
+    && uv pip freeze > requirements.lock \
+    # Clean uv cache
+    && uv cache clean
 
 # Fetching System information at shell startup
 RUN echo "fastfetch" >> /home/${USER}/.bashrc

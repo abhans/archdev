@@ -63,7 +63,7 @@ RUN pacman-key --init \
 
 For setting up the Python environment, a package manager is needed. For this, `uv` package manager is selected for it's speed and configuration capabilities.
 
-`uv` is [installed using `pacman`](https://docs.astral.sh/uv/getting-started/installation/):
+`uv` is [[installed using `pacman`]](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```Dockerfile
 # Install essentials and "uv" package manager
@@ -85,11 +85,13 @@ RUN uv python install 3.12 \
 
 To utilize GPU acceleration and parallel computation, **CUDA** must be set up and configured for deep learning frameworks such as TensorFlow, PyTorch etc.
 
+#### 3.A What is CUDA?
+
 **CUDA** (Compute Unified Device Architecture) is a **parallel computing platform** and programming model developed by NVIDIA.
 
 - It allows developers to use NVIDIA GPUs for **general purpose processing (GPGPU)**, enabling significant acceleration for compute-intensive applications such as deep learning, scientific computing, and image processing.
 
-#### 3.1 What are cuDNN, cuFFT, and cuBLAS?
+#### 3.B What are cuDNN, cuFFT, and cuBLAS?
 
 - **cuDNN**: NVIDIA **CUDA Deep Neural Network** library.
   - Provides **highly optimized implementations for standard routines** such as forward and backward convolution, pooling, normalization, and activation layers for deep neural networks.
@@ -98,7 +100,7 @@ To utilize GPU acceleration and parallel computation, **CUDA** must be set up an
 - **cuBLAS**: NVIDIA **CUDA Basic Linear Algebra Subprograms** library.
   - Offers **GPU-accelerated linear algebra operations**, such as matrix multiplication and vector operations.
 
-More detailed guide for setting up CUDA in Arch can be found [here.](https://wiki.archlinux.org/title/GPGPU#CUDA)
+A detailed guide for setting up CUDA in Arch can be found [[here]](https://wiki.archlinux.org/title/GPGPU#CUDA)
 
 CUDA and proper drivers can be installed using `pacman`:
 
@@ -117,6 +119,15 @@ CUDA binaries are added to the PATH:
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 ```
-<!---
-TODO: Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
--->
+
+## ToDos
+
+- [ ] Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
+- [ ] Initialize `uv` to the `dev/` directory as a project
+  - Read more about projects [[here]](https://docs.astral.sh/uv/concepts/projects/)
+- [ ] Find a better way to check system, done by `run.py`
+
+  ```bash
+  uv init --bare --python 3.12 --no-cache -v
+  ```
+
