@@ -20,8 +20,7 @@ ENV HOME=/home/${USER}
 ENV VENV_DIR=${HOME}/.venv
 
 # Install CUDA & Drivers
-RUN pacman -Syy --noconfirm \
-    && yes | pacman -S --noconfirm nvidia cuda cuda-toolkit \
+RUN && pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
     && pacman -Sy neofetch \
     && pacman -Scc --noconfirm \
