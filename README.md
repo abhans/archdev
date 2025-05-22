@@ -11,7 +11,7 @@ This setup utilizes Docker containers to setup Arch Linux with CUDA drivers.
 #   - Neofetch (at the start of each bash session)
 #   - Tensorflow & CUDA
 #   - NVIDIA Drivers
-#   - Python and C+ support
+#   - Python and C++ support
 
 # Base Image (Archlinux)
 FROM archlinux:latest
@@ -85,6 +85,19 @@ RUN uv python install 3.12 \
 
 To utilize GPU acceleration and parallel computation, **CUDA** must be set up and configured for deep learning frameworks such as TensorFlow, PyTorch etc.
 
+**CUDA** (Compute Unified Device Architecture) is a **parallel computing platform** and programming model developed by NVIDIA.
+
+- It allows developers to use NVIDIA GPUs for **general purpose processing (GPGPU)**, enabling significant acceleration for compute-intensive applications such as deep learning, scientific computing, and image processing.
+
+#### 3.1 What are cuDNN, cuFFT, and cuBLAS?
+
+- **cuDNN**: NVIDIA **CUDA Deep Neural Network** library.
+  - Provides **highly optimized implementations for standard routines** such as forward and backward convolution, pooling, normalization, and activation layers for deep neural networks.
+- **cuFFT**: NVIDIA **CUDA Fast Fourier Transform** library.
+  - Delivers **GPU-accelerated FFT computations** for signal and image processing.
+- **cuBLAS**: NVIDIA **CUDA Basic Linear Algebra Subprograms** library.
+  - Offers **GPU-accelerated linear algebra operations**, such as matrix multiplication and vector operations.
+
 More detailed guide for setting up CUDA in Arch can be found [here.](https://wiki.archlinux.org/title/GPGPU#CUDA)
 
 CUDA and proper drivers can be installed using `pacman`:
@@ -98,6 +111,12 @@ RUN && pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -Syu --noconfirm
 ```
 
+CUDA binaries are added to the PATH:
+
+```Dockerfile
+ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
+ENV LD_LIBRARY_PATH=/opt/cuda/lib64
+```
 <!---
 TODO: Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
 -->
