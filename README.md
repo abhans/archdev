@@ -144,7 +144,7 @@ CUDA binaries are then added to the PATH:
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 # Turn off oneDNN operations
-ENv TF_ENABLE_ONEDNN_OPTS=0
+ENV TF_ENABLE_ONEDNN_OPTS=0
 ```
 
 To use `uv` and utilize cache properly, both paths' permissions are configured
