@@ -29,10 +29,12 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
     && sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 
 # Install essentials and "uv" package manager
-RUN pacman -Sy --noconfirm unzip sudo curl git vi nvim \
+RUN pacman -Sy --noconfirm fastfetch unzip sudo curl git vi nvim \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && pacman -Scc --noconfirm
 
+# Append ".local/bin" to PATH
+#   This ensures that binaries installed by `uv` (such as Python) are available "system-wide"
 ENV PATH="/home/abhans/.local/bin:${PATH}"
 
 # Install Python 3.12 and create a virtual environment
@@ -45,16 +47,16 @@ RUN pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -Syu --noconfirm \
     && pacman -Scc --noconfirm
 
-RUN pacman -S --noconfirm fastfetch
-
 # Add the CUDA folders to the PATH
+#   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
-
+# Turn off oneDNN operations
+ENV TF_ENABLE_ONEDNN_OPTS=0
 # Fix permissions for the .venv and cache directories
 RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
 
-# Copy entrypoint bash script & change it to executable
+# Copy entrypoint bash script & change its' permission to executable
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
@@ -77,7 +79,8 @@ RUN source ${VENV_DIR}/bin/activate \
     # Clean uv cache
     && uv cache clean
 
-# Fetching System information at shell startup
-RUN echo "fastfetch" >> /home/${USER}/.bashrc
+# Fetching System information & activate .venv at shell startup
+RUN echo "fastfetch" >> /home/${USER}/.bashrc \
+    && echo "source $VENV_DIR/bin/activate" >> /home/${USER}/.bashrc
 
 ENTRYPOINT ["/entrypoint.sh"]

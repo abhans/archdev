@@ -2,32 +2,36 @@
 
 This setup utilizes Docker containers to setup Arch Linux with CUDA drivers.
 
+It also comes with the `uv` **package manager** with a virtual environment setup, configured with **popular deep learning frameworks** such as `PyTorch`, `TensorFlow` and other useful libraries, one of which is `OpenCV`.
+
 ## The `Dockerfile`
 
 `Dockerfile` is created to store the building process of an image, gives the ability to customize if necessary in future developments.
-
-```Dockerfile
-# TODO: Arch Linux Development Environment
-#   - Neofetch (at the start of each bash session)
-#   - Tensorflow & CUDA
-#   - NVIDIA Drivers
-#   - Python and C++ support
-
-# Base Image (Archlinux)
-FROM archlinux:latest
-```
 
 This setup consists of 5 main steps:
 
 1. Arch Linux Configuration & Setup
 2. `uv` Package Manager & Python Installation
 3. CUDA and Nvidia Drivers Setup
-4. User & Environment COnfiguration
-5. Development Setup
+4. User & Environment Configuration
 
 ### 1. Arch Linux Configuration & Setup
 
-The latest `archlinux` image is utilized as a base image. It can be pinned with it's digest, which is exposed with:
+The latest `archlinux` image is utilized as the base image.
+
+```Dockerfile
+# Arch Linux Development Environment
+#   - CUDA Support
+#   - PyTorch & TensorFlow
+#   - NVIDIA Drivers
+#   - Python and C++ Support
+#   - `uv` Package Manager
+
+# Base Image (Archlinux)
+FROM archlinux:latest
+```
+
+It can be pinned with it's digest, which is exposed with:
 
 ```pwsh
 docker pull archlinux:latest
@@ -59,6 +63,17 @@ RUN pacman-key --init \
     && pacman --noconfirm -Syu
 ```
 
+After this process is done, a new user is created from the build arguments and configured as a "sudoer":
+
+```Dockerfile
+# Create a new user
+RUN useradd --create-home --shell /bin/bash ${USER} \
+    && usermod -aG wheel ${USER} \
+    && echo "$USER ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    # Setting the user as a "sudoer"
+    && sed -i 's/^# %wheel/%wheel/' /etc/sudoers
+```
+
 ### 2. `uv` Package Manager & Python Installation
 
 For setting up the Python environment, a package manager is needed. For this, `uv` package manager is selected for it's speed and configuration capabilities.
@@ -67,8 +82,17 @@ For setting up the Python environment, a package manager is needed. For this, `u
 
 ```Dockerfile
 # Install essentials and "uv" package manager
-RUN pacman -Sy --noconfirm unzip sudo curl git vi nvim \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN pacman -Sy --noconfirm fastfetch unzip sudo curl git vi nvim \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && pacman -Scc --noconfirm
+```
+
+To ensure that user-installed Python tools are accessible in the container's shell and scripts, the `/home/abhans/.local/bin` is appended to the `PATH` environment variable:
+
+```Dockerfile
+# Append ".local/bin" to PATH
+#   This ensures that binaries installed by `uv` (such as Python) are available "system-wide"
+ENV PATH="/home/abhans/.local/bin:${PATH}"
 ```
 
 After the installation of `uv`, it can be used to install specific Python version as the **base Python interpreter.**
@@ -108,18 +132,94 @@ CUDA and proper drivers can be installed using `pacman`:
 # Install CUDA & Drivers
 RUN && pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
-    && pacman -Sy neofetch \
-    && pacman -Scc --noconfirm \
-    && pacman -Syu --noconfirm
+    && pacman -Syu --noconfirm \
+    && pacman -Scc --noconfirm
 ```
 
-CUDA binaries are added to the PATH:
+CUDA binaries are then added to the PATH:
 
 ```Dockerfile
+# Add the CUDA folders to the PATH
+#   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
+ENv TF_ENABLE_ONEDNN_OPTS=0
 ```
 
+To use `uv` and utilize cache properly, both paths' permissions are configured
+
+```Dockerfile
+# Fix permissions for the .venv and cache directories
+RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
+```
+
+### 4. User & Environment Configuration
+
+The current directory is copied as a whole to `${HOME}/dev/` to setup the working directory:
+
+```Dockerfile
+# Copy project files and fix permissions
+COPY . ${HOME}/dev/
+```
+
+The copied directories' permissions are configured so changes can be made:
+
+```Dockerfile
+# Fix permissions for the working directory
+RUN chown -R ${USER}:${USER} ${HOME}/dev/
+```
+
+Then, the new working directory is selected and PYPI packages are installed using both `pip3` and `requirements.txt`. Finally, state of packages are saved to a `.lock` file for future use.
+
+```Dockerfile
+# Switch to user
+USER ${USER}
+
+WORKDIR ${HOME}/dev
+
+RUN source ${VENV_DIR}/bin/activate \
+    && uv pip install --upgrade pip \
+    && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
+    && uv pip install --no-cache-dir -r requirements.txt \
+    # Save the installed packages to a lock file
+    && uv pip freeze > requirements.lock \
+    # Clean uv cache
+    && uv cache clean
+```
+
+For extra flavor, `fastfetch` is added to the `.bashrc`, as well as the activation command of the virtual environment, guaranteeing the activation of the environment at each startup:
+
+```Dockerfile
+# Fetching System information & activate .venv at shell startup
+RUN echo "fastfetch" >> /home/${USER}/.bashrc \
+    && echo "source $VENV_DIR/bin/activate" >> /home/${USER}/.bashrc
+```
+
+Lastly, the `entrypoint.sh` script is set as the **entrypoint executable** for initial checks of the container at startup:
+
+```Dockerfile
+ENTRYPOINT ["/entrypoint.sh"]
+```
+
+## How to Use
+
+After pulling the image, it can be tested with:
+
+```bash
+docker run --gpus all -it --rm "archlinux/latest:cuda"
+```
+
+For a **localy-stored** image, remove `--rm` flag and specify a **name** for the container:
+
+```bash
+ docker run --gpus all -it -n <NAME> "archlinux/latest:cuda"
+```
+
+## Reminder to User
+
+The whole process **takes quite a long time (over 30 min)** and the resulting image is **very large (>30 GB).** Currently thinking of an improvement on both areas.
+
+<!--
 ## ToDos
 
 - [ ] Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
@@ -127,7 +227,7 @@ ENV LD_LIBRARY_PATH=/opt/cuda/lib64
   - Read more about projects [[here]](https://docs.astral.sh/uv/concepts/projects/)
 - [ ] Find a better way to check system, done by `run.py`
 
-  ```bash
-  uv init --bare --python 3.12 --no-cache -v
-  ```
-
+```bash
+uv init --bare --python 3.12 --no-cache -v
+```
+-->

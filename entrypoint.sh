@@ -1,7 +1,11 @@
 #!/bin/bash
 set -e
 
-exec bash -l
+# Activate the virtual environment
+source "$HOME/.venv/bin/activate"
 
 # Check the Tensorflow installation & write it to a log file.
-source $VENV_DIR/bin/activate && python3 $HOME/dev/run.py
+python3 "$HOME/dev/run.py"
+
+# Start an interactive shell
+exec bash -l

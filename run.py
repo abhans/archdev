@@ -2,6 +2,22 @@ import os
 import logging
 import subprocess
 
+# Add CUDA to "PATH"
+if os.path.exists('/opt/cuda/bin'):
+    # Prepend '/opt/cuda/bin' to the "PATH" environment variable
+    #   This makes CUDA tools available in the system path for this process
+    os.environ["PATH"] = "/opt/cuda/bin:" + os.environ.get("PATH", "")
+
+# Suppress TensorFlow INFO, WARNING, and ERROR logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+# Suppress absl logging (if used)
+os.environ["ABSL_LOG_LEVEL"] = "3"
+# Turn off oneDNN operations
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+# Set a custom directory for Matplotlib configuration files to avoid permission issues
+os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
+
+
 HOME: str = os.environ['HOME']
 LOG: str = f'{HOME}/report.txt'
 
@@ -21,7 +37,7 @@ def checkCUDA() -> None:
     """
     logging.info(f"Checking CUDA installation.")
     try:
-        res = subprocess.run(['nvcc --version'], stdout=subprocess.PIPE, text=True)
+        res = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
 
         if res.returncode == 0:
             logging.info(f"CUDA is installed -> NVCC:{res.stdout}")
