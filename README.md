@@ -143,6 +143,7 @@ CUDA binaries are then added to the PATH:
 #   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
+# Turn off oneDNN operations
 ENv TF_ENABLE_ONEDNN_OPTS=0
 ```
 
@@ -151,6 +152,14 @@ To use `uv` and utilize cache properly, both paths' permissions are configured
 ```Dockerfile
 # Fix permissions for the .venv and cache directories
 RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
+```
+
+The entrypoint script `entrypoint.sh` is copied to the `/` directory and its' permission is configured to make it executable:
+
+```Dockerfile
+# Copy entrypoint bash script & change its' permission to executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 ```
 
 ### 4. User & Environment Configuration
@@ -222,7 +231,7 @@ The whole process **takes quite a long time (over 30 min)** and the resulting im
 <!--
 ## ToDos
 
-- [ ] Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
+- [x] Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
 - [ ] Initialize `uv` to the `dev/` directory as a project
   - Read more about projects [[here]](https://docs.astral.sh/uv/concepts/projects/)
 - [ ] Find a better way to check system, done by `run.py`

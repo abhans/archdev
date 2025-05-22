@@ -1,4 +1,4 @@
-tensorflow      # TODO: Check for unnecessary logging clutter
+tensorflow[and-cuda]      # TODO: Check for unnecessary logging clutter
 pandas
 polars
 matplotlib
