@@ -13,108 +13,91 @@ This setup utilizes Docker containers to setup Arch Linux with CUDA drivers.
 #   - NVIDIA Drivers
 #   - Python and C+ support
 
-# Base Image (Archlinux with SHA256 Digest)
-FROM archlinux:latest@sha256:69b59e60bb8594d8c4bf375e9beee186e4b3426ec4f50a65d92e7f36ce5e7113
+# Base Image (Archlinux)
+FROM archlinux:latest
 ```
 
 This setup consists of 5 main steps:
 
 1. Arch Linux Configuration & Setup
-2. CUDA and Nvidia Drivers Setup
-3. User & Environment COnfiguration
-4. Python Setup
+2. `uv` Package Manager & Python Installation
+3. CUDA and Nvidia Drivers Setup
+4. User & Environment COnfiguration
 5. Development Setup
 
 ### 1. Arch Linux Configuration & Setup
 
-The base `archlinux` image is utilized as a base image. It's pinned with it's digest, which is exposed with:
+The latest `archlinux` image is utilized as a base image. It can be pinned with it's digest, which is exposed with:
 
 ```pwsh
 docker pull archlinux:latest
 docker images archlinux:latest --format '{{.Digest}}'
 ```
 
-To simplify the rest of the building proecess, build arguments are created:
+To simplify the rest of the building process, build arguments are created:
 
 ```Dockerfile
-# Build Arguments
+# Build arguments
 ARG USER=abhans
 ARG GUID=1000
 ARG UID=${GUID}
 ENV HOME=/home/${USER}
+ENV VENV_DIR=${HOME}/.venv
 ```
 
-This ensures a proper initialization of the environment while making it configurable.
+This ensures a proper initialization of the environment while also making it configurable.
 
 Then, in root, signature keys are populated to avoid signature errors. System is updated and missing dependencies are installed:
 
 ```Dockerfile
-# Switching to root if it's not already
+# Select the ROOT user
 USER root
 
-# Populating Signature Keys
-RUN pacman-key --init && \
-    pacman-key --populate archlinux
-
-# System Updates
-RUN pacman -Syu --noconfirm
-
-RUN pacman -Sy --noconfirm --needed base-devel sudo vi nvim git && \
-    pacman -Sy --noconfirm python-pip python-virtualenv && \
-    pacman -Sy --noconfirm neofetch && \
-    rm -rf /var/cache/pacman/pkg/*
+# Initialize Arch Linux
+RUN pacman-key --init \
+    && pacman-key --populate archlinux \
+    && pacman --noconfirm -Syu
 ```
 
-### 2. CUDA and Nvidia Drivers Setup
+### 2. `uv` Package Manager & Python Installation
 
-For the environment to support CUDA and GPU acceleration, a proper setup of CUDA drivers and libraries must be made.
+For setting up the Python environment, a package manager is needed. For this, `uv` package manager is selected for it's speed and configuration capabilities.
 
-Related NVIDIA and CUDA packages are installed with `pacman`:
+`uv` is [installed using `pacman`](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```Dockerfile
-# Installing CUDA drivers
-RUN pacman -Sy --noconfirm --needed nvidia opencl-nvidia cuda cuda-tools
+# Install essentials and "uv" package manager
+RUN pacman -Sy --noconfirm unzip sudo curl git vi nvim \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
+After the installation of `uv`, it can be used to install specific Python version as the **base Python interpreter.**
+
+After installing the base interpreter, a **virtual environment** can be created in the specified path:
+
+```Dockerfile
+# Install Python 3.12 and create a virtual environment
+RUN uv python install 3.12 \
+    && uv venv --python 3.12 ${VENV_DIR}
+```
+
+### 3. CUDA and Nvidia Drivers Setup
+
+To utilize GPU acceleration and parallel computation, **CUDA** must be set up and configured for deep learning frameworks such as TensorFlow, PyTorch etc.
+
+More detailed guide for setting up CUDA in Arch can be found [here.](https://wiki.archlinux.org/title/GPGPU#CUDA)
+
+CUDA and proper drivers can be installed using `pacman`:
+
+```Dockerfile
+# Install CUDA & Drivers
+RUN && pacman -S --noconfirm nvidia cuda cuda-toolkit \
+    && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
+    && pacman -Sy neofetch \
+    && pacman -Scc --noconfirm \
+    && pacman -Syu --noconfirm
+```
+
 <!---
 TODO: Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
 -->
-
-Then a new user is created and configured as a "sudoer":
-
-```Dockerfile
-# Configuring groups and users
-RUN useradd --create-home --shell /bin/bash ${USER} && \
-    usermod -aG wheel ${USER}
-
-# Setting the user as a "sudoer"
-RUN sed -i 's/^# %wheel/%wheel/' /etc/sudoers
-```
-
-...
-
-```Dockerfile
-# Setup CUDA and Drivers
-# TODO: Resolve this issue
-
-WORKDIR ${HOME}
-
-# Switching to the user
-USER ${USER}
-
-# Setting up the main Python environment
-RUN python3 -m venv ~/.venv
-
-# Installing PyPI packages
-COPY requirements.txt /requirements.txt
-RUN source ~/.venv/bin/activate && \
-    pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir -r /requirements.txt
-
-# Fetching System information at shel lstartup
-RUN echo "neofetch" >> /home/${USER}/.bashrc
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
-```
