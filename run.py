@@ -40,12 +40,12 @@ def checkCUDA() -> None:
         res = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
 
         if res.returncode == 0:
-            logging.info(f"CUDA is installed -> NVCC:{res.stdout}")
+            logging.info(f"CUDA is installed -> {res.stdout}")
         else:
             logging.warning(f'NVCC Error: {res.stderr}')
 
-    except FileNotFoundError as FnF:
-        logging.error('nvcc command NOT found! CUDA is Not installed properly...')
+    except FileNotFoundError as FnFE:
+        logging.error(f'nvcc command NOT found! CUDA is not installed properly... {str(FnFE)}')
 
 
 def checkTF() -> None:
