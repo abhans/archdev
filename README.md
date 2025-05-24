@@ -224,6 +224,18 @@ For a **localy-stored** image, remove `--rm` flag and specify a **name** for the
  docker run --gpus all -it -n <NAME> "archlinux/latest:cuda"
 ```
 
+## Customizing Build Arguments
+
+You can customize the Docker image by altering the build arguments defined in the `Dockerfile`. For example, you can change the default username, user ID, or group ID to fit your preferences or environment.
+
+To specify custom values during the build process, use the `--build-arg` flag with `docker build`. For example:
+
+```bash
+docker build --build-arg USER=<MY_USER_NAME> -D -t "archlinux/latest:cuda" .
+```
+
+This command sets the username to `MY_USER_NAME` in the resulting image.
+
 ## Reminder to User
 
 The whole process **takes quite a long time (over 30 min)** and the resulting image is **very large (>30 GB).** Currently thinking of an improvement on both areas.

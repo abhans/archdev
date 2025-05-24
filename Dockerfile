@@ -51,6 +51,8 @@ RUN pacman -S --noconfirm nvidia cuda cuda-toolkit \
 #   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
+# Configure the Matplotlib temporary directory
+ENV MPLCONFIGDIR=/tmp/matplotlib
 # Turn off oneDNN operations
 ENV TF_ENABLE_ONEDNN_OPTS=0
 # Fix permissions for the .venv and cache directories

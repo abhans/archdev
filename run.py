@@ -16,7 +16,8 @@ os.environ["ABSL_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # Set a custom directory for Matplotlib configuration files to avoid permission issues
 os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
-
+# # Restrict TensorFlow to only see the first GPU (GPU 0)
+# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 HOME: str = os.environ['HOME']
 LOG: str = f'{HOME}/report.txt'
