@@ -8,3 +8,4 @@ pillow
 opencv-python
 PyQt5
 Flask
+protobuf<4.21       # Resolves AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'
