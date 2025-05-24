@@ -221,7 +221,7 @@ docker run --gpus all -it --rm "archlinux/latest:cuda"
 For a **localy-stored** image, remove `--rm` flag and specify a **name** for the container:
 
 ```bash
- docker run --gpus all -it -n <NAME> "archlinux/latest:cuda"
+ docker run --gpus all -it --name <NAME> "archlinux/latest:cuda"
 ```
 
 ## Customizing Build Arguments

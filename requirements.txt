@@ -1,7 +1,7 @@
-tensorflow[and-cuda]==2.16.1      # TODO: Check for unnecessary logging clutter
+tf-nightly     # TODO: Check for unnecessary logging clutter
 pandas
 polars
-matplotlib
+# matplotlib        # Weird Errors (Can be downloaded later by the user)
 plotly
 ipykernel
 pillow

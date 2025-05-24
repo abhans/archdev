@@ -85,4 +85,7 @@ RUN source ${VENV_DIR}/bin/activate \
 RUN echo "fastfetch" >> /home/${USER}/.bashrc \
     && echo "source $VENV_DIR/bin/activate" >> /home/${USER}/.bashrc
 
+# Ensure the container starts in the user's HOME directory
+WORKDIR ${HOME}
+
 ENTRYPOINT ["/entrypoint.sh"]

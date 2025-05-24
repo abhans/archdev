@@ -16,8 +16,8 @@ os.environ["ABSL_LOG_LEVEL"] = "3"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # Set a custom directory for Matplotlib configuration files to avoid permission issues
 os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
-# # Restrict TensorFlow to only see the first GPU (GPU 0)
-# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+# Restrict TensorFlow to only see the first GPU (GPU 0)
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 HOME: str = os.environ['HOME']
 LOG: str = f'{HOME}/report.txt'
@@ -41,7 +41,7 @@ def checkCUDA() -> None:
         res = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
 
         if res.returncode == 0:
-            logging.info(f"CUDA is installed -> {res.stdout}")
+            logging.info(f"CUDA is installed:\n{res.stdout}")
         else:
             logging.warning(f'NVCC Error: {res.stderr}')
 
@@ -80,11 +80,40 @@ def checkTF() -> None:
     except Exception as E:
         logging.error(f'An unexpected error occured! {str(E)}')
 
+def checkPyTorch() -> None:
+    """
+    Checks the installation of PyTorch and CUDA configuration.
+    Imports PyTorch and checks the available CUDA devices.
+
+    Results are saved to the report.
+    """
+    logging.info(f"Checking PyTorch installation.")
+
+    try:
+        import torch    # type: ignore
+
+        PT_VERSION: str = torch.__version__
+        logging.info(f'PyTorch {PT_VERSION} installed.')
+
+        if torch.cuda.is_available():
+            logging.info(f'GPUs detected: {torch.cuda.device_count()} GPU(s)')
+            for i in range(torch.cuda.device_count()):
+                logging.info(f':{torch.cuda.get_device_name(i)}')
+        else:
+            logging.warning(f"PyTorch DID NOT detect any GPUs!")
+
+    except ImportError as ImE:
+        logging.error(f'PyTorch is NOT installed. {str(ImE)}')
+
+    except Exception as E:
+        logging.error(f'An unexpected error occured! {str(E)}')
+
 def main() -> None:
     logging.info(f'Starting CUDA & TensorFlow Report.')
     
     checkCUDA()
     checkTF()
+    checkPyTorch()
 
     logging.info(f"Completed. Report has been created at '{LOG}'")
 
