@@ -214,13 +214,13 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 After pulling the image, it can be tested with:
 
-```bash
+```pwsh
 docker run --gpus all -it --rm "archlinux/latest:cuda" bash
 ```
 
 For a **localy-stored** image, remove `--rm` flag and specify a **name** for the container:
 
-```bash
+```pwsh
 docker run --gpus all -it --name <NAME> "archlinux/latest:cuda" bash
 ```
 
@@ -230,7 +230,7 @@ You can customize the Docker image by altering the build arguments defined in th
 
 To specify custom values during the build process, use the `--build-arg` flag with `docker build`. For example:
 
-```bash
+```pwsh
 docker build --build-arg USER=<MY_USER_NAME> -D -t "archlinux/latest:cuda" .
 ```
 
@@ -240,7 +240,7 @@ This command sets the username to `MY_USER_NAME` in the resulting image.
 
 For curiosity and verbose process, additional arguments can be provided to log the process to a `<BUILD_LOG>` file:
 
-```bash
+```pwsh
 docker build --build-arg USER=hans -D --progress=plain -t "archlinux/latest:cuda" . *> <BUILD_LOG>
 ```
 

@@ -83,26 +83,24 @@ RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
 # Set the locale to UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
 
 # Copy entrypoint bash script & change its' permission to executable
-ARG DEV=${HOME}/.dev/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Copy project files and fix permissions
-COPY . ${HOME}/dev/
+COPY . ${DEV}
 
 # Fix permissions for the working directory
-RUN chown -R ${USER}:${USER} ${HOME}/dev/
+RUN chown -R ${USER}:${USER} ${DEV}
 # Switch to user
 USER ${USER}
 
-WORKDIR ${HOME}/dev
+WORKDIR ${DEV}
 
 RUN source ${VENV_DIR}/bin/activate \
-    # Initialize a `uv` project 
-    && uv init --bare --python 3.12 --no-cache -v \
+    # Initialize a `uv` project (base)
+    && uv init --bare --python 3.12 -v -n base \
     && uv pip install --upgrade pip \
     && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
     && uv pip install --no-cache-dir -r requirements.txt \
