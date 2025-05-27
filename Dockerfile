@@ -5,12 +5,23 @@
 #   - Python and C++ support
 FROM archlinux:latest
 
-# Build arguments for the user
+# ----------------------- BUILD ARGS ------------------------
+# Set the user and group IDs for the container
+#   This allows the container to run with the same user and group IDs as the host system
+#   This is useful for avoiding permission issues when mounting volumes
+
 ARG USER=abhans
 ARG GUID=1000
 ARG UID=${GUID}
+# Environment variables for the user
 ENV HOME=/home/${USER}
 ENV VENV_DIR=${HOME}/.venv
+# Development directory
+ARG DEV=${HOME}/.dev/
+
+# ------------------------ USER CONFIG ------------------------
+# Set the user and group IDs for the container
+#  This allows the container to run with the same user and group IDs as the host system
 
 # Select the ROOT user
 USER root
@@ -28,8 +39,12 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
     # Setting the user as a "sudoer"
     && sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 
+# ------------------------ INSTALLATION (Python & Packages) ------------------------
+# Install base development tools
+#  This installs essential development tools such as Git, GCC, Make, and CMake
+
 # Install essentials and "uv" package manager
-RUN pacman -Sy --noconfirm fastfetch openssh unzip sudo curl git vi nvim \
+RUN pacman -Sy --noconfirm cmake gcc make fastfetch openssh unzip sudo curl git vi nvim \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && pacman -Scc --noconfirm
 
@@ -40,6 +55,11 @@ ENV PATH="/home/${USER}/.local/bin:${PATH}"
 # Install Python 3.12 and create a virtual environment
 RUN uv python install 3.12 \
     && uv venv --python 3.12 ${VENV_DIR}
+
+# ------------------------ CUDA CONFIGURATION ------------------------
+# Install NVIDIA Drivers and CUDA Toolkit
+#  This installs the NVIDIA drivers and CUDA toolkit for GPU support
+#  The `nvidia-container-toolkit` is installed to enable GPU support in Docker containers
 
 # Install CUDA & Drivers
 RUN pacman -S --noconfirm nvidia cuda cuda-toolkit \
@@ -53,12 +73,20 @@ ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
 ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 # Configure the Matplotlib temporary directory
 ENV MPLCONFIGDIR=/tmp/matplotlib
-# Turn off oneDNN operations
-ENV TF_ENABLE_ONEDNN_OPTS=0
 # Fix permissions for the .venv and cache directories
 RUN chown -R ${USER}:${USER} ${VENV_DIR} /home/${USER}/.cache
 
+# ------------------------ ENVIRONMENT ------------------------
+# Sets up the environment for the container
+#  This includes setting the locale, copying entrypoint scripts, and fixing permissions
+
+# Set the locale to UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
 # Copy entrypoint bash script & change its' permission to executable
+ARG DEV=${HOME}/.dev/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

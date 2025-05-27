@@ -64,7 +64,7 @@ def checkSMI() -> None:
         smiRes = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
         
         if smiRes.returncode == 0:
-            logging.info(f"NVIDIA recognised GPU(s):\n{smiRes.stdout}")
+            logging.info(f"{smiRes.stdout}")
         else:
             logging.warning(f'NVIDIA SMI Error: {smiRes.stderr}')
     
@@ -94,7 +94,8 @@ def checkTF() -> None:
         if DEVICES:
             logging.info(f'GPUs detected: {len(DEVICES)} GPU(s)')
             for DEVICE in DEVICES:
-                logging.info(f':{DEVICE.name}')
+                details = tf.config.experimental.get_device_details(DEVICE)
+                logging.info(f':{details.get('device_name', 'Unknown Device')}')
         # No GPU is detected
         else:
             logging.warning(f"TensorFlow DID NOT detect any GPUs!")
@@ -137,36 +138,38 @@ def main() -> None:
     logging.info(f'Starting System Report.')
     
     checkCUDA()
+    checkSMI()
     checkTF()
     checkTorch()
-    checkOpenCV()
+    # checkOpenCV()
 
     logging.info(f"Completed. Report has been created at '{LOG}'")
 
-def checkOpenCV() -> None:
-    """
-    Checks the installation of OpenCV and its access to the camera.
-    Imports OpenCV and attempts to access the camera.
+# TODO: Resolve the connectivity issues with OpenCV
+# def checkOpenCV() -> None:
+#     """
+#     Checks the installation of OpenCV and its access to the camera.
+#     Imports OpenCV and attempts to access the camera.
 
-    Results are saved to the report.    
-    """
-    try:
-        import cv2  # type: ignore
-        CV2_VERSION: str = cv2.__version__
-        logging.info(f'OpenCV {CV2_VERSION} installed.')
+#     Results are saved to the report.    
+#     """
+#     try:
+#         import cv2  # type: ignore
+#         CV2_VERSION: str = cv2.__version__
+#         logging.info(f'OpenCV {CV2_VERSION} installed.')
     
-        try:
-            capture = cv2.VideoCapture(0)
-            if capture.isOpened():
-                logging.info(f'OpenCV can access the camera: {capture.get(cv2.CAP_PROP_FPS)} FPS')
-            else:
-                logging.warning('OpenCV cannot access the camera.')
-            capture.release()
-        except Exception as E:
-            logging.error(f'An error occurred while checking OpenCV camera access: {str(E)}')
+#         try:
+#             capture = cv2.VideoCapture(0)
+#             if capture.isOpened():
+#                 logging.info(f'OpenCV can access the camera: {capture.get(cv2.CAP_PROP_FPS)} FPS')
+#             else:
+#                 logging.warning('OpenCV cannot access the camera.')
+#             capture.release()
+#         except Exception as E:
+#             logging.error(f'An error occurred while checking OpenCV camera access: {str(E)}')
 
-    except ImportError as ImE:
-        logging.error(f'OpenCV is NOT installed. {str(ImE)}')
+#     except ImportError as ImE:
+#         logging.error(f'OpenCV is NOT installed. {str(ImE)}')
 
 if __name__ == '__main__':
     # Execute Checks

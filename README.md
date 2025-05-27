@@ -124,7 +124,7 @@ To utilize GPU acceleration and parallel computation, **CUDA** must be set up an
 - **cuBLAS**: NVIDIA **CUDA Basic Linear Algebra Subprograms** library.
   - Offers **GPU-accelerated linear algebra operations**, such as matrix multiplication and vector operations.
 
-A detailed guide for setting up CUDA in Arch can be found [[here]](https://wiki.archlinux.org/title/GPGPU#CUDA)
+A detailed guide for setting up CUDA in Arch can be found at [[Arch Linux Wiki: GPGPU CUDA setup]](https://wiki.archlinux.org/title/GPGPU#CUDA)
 
 CUDA and proper drivers can be installed using `pacman`:
 
@@ -235,6 +235,16 @@ docker build --build-arg USER=<MY_USER_NAME> -D -t "archlinux/latest:cuda" .
 ```
 
 This command sets the username to `MY_USER_NAME` in the resulting image.
+
+### Logging the Build Process
+
+For curiosity and verbose process, additional arguments can be provided to log the process to a `<BUILD_LOG>` file:
+
+```bash
+docker build --build-arg USER=hans -D --progress=plain -t "archlinux/latest:cuda" . *> <BUILD_LOG>
+```
+
+When this command is run, the build process is silent and instead logged to the `<BUILD_LOG>.log` file.
 
 ## Reminder to User
 
