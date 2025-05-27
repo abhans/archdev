@@ -29,13 +29,13 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
     && sed -i 's/^# %wheel/%wheel/' /etc/sudoers
 
 # Install essentials and "uv" package manager
-RUN pacman -Sy --noconfirm fastfetch unzip sudo curl git vi nvim \
+RUN pacman -Sy --noconfirm fastfetch openssh unzip sudo curl git vi nvim \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && pacman -Scc --noconfirm
 
 # Append ".local/bin" to PATH
 #   This ensures that binaries installed by `uv` (such as Python) are available "system-wide"
-ENV PATH="/home/abhans/.local/bin:${PATH}"
+ENV PATH="/home/${USER}/.local/bin:${PATH}"
 
 # Install Python 3.12 and create a virtual environment
 RUN uv python install 3.12 \
@@ -46,7 +46,7 @@ RUN pacman -S --noconfirm nvidia cuda cuda-toolkit \
     && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
     && pacman -Syu --noconfirm \
     && pacman -Scc --noconfirm
-
+    
 # Add the CUDA folders to the PATH
 #   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
@@ -73,6 +73,8 @@ USER ${USER}
 WORKDIR ${HOME}/dev
 
 RUN source ${VENV_DIR}/bin/activate \
+    # Initialize a `uv` project 
+    && uv init --bare --python 3.12 --no-cache -v \
     && uv pip install --upgrade pip \
     && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
     && uv pip install --no-cache-dir -r requirements.txt \

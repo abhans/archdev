@@ -20,7 +20,7 @@ os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 HOME: str = os.environ['HOME']
-LOG: str = f'{HOME}/report.txt'
+LOG: str = f'{HOME}/report.log'
 
 logging.basicConfig(
     format=">>> %(asctime)s | %(msg)s -> %(name)s @ %(filename)s",
@@ -38,16 +38,41 @@ def checkCUDA() -> None:
     """
     logging.info(f"Checking CUDA installation.")
     try:
-        res = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
-
-        if res.returncode == 0:
-            logging.info(f"CUDA is installed:\n{res.stdout}")
+        nvccRes = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
+        
+        if nvccRes.returncode == 0:
+            logging.info(f"CUDA is installed:\n{nvccRes.stdout}")
         else:
-            logging.warning(f'NVCC Error: {res.stderr}')
-
+            logging.warning(f'NVCC & NVIDIA Error: {nvccRes.stderr}')
+    
     except FileNotFoundError as FnFE:
         logging.error(f'nvcc command NOT found! CUDA is not installed properly... {str(FnFE)}')
+    
+    except Exception as E:
+        logging.error(f'An unexpected error occurred while checking CUDA: {str(E)}')
 
+
+def checkSMI() -> None:
+    """
+    Checks whether the NVIDIA System Management Interface (SMI) is installed.
+    Invokes CMD commands and inspects the outputs.
+
+    Results are saved to the report.
+    """
+    logging.info(f"Checking NVIDIA SMI installation.")
+    try:
+        smiRes = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
+        
+        if smiRes.returncode == 0:
+            logging.info(f"NVIDIA recognised GPU(s):\n{smiRes.stdout}")
+        else:
+            logging.warning(f'NVIDIA SMI Error: {smiRes.stderr}')
+    
+    except FileNotFoundError as FnFE:
+        logging.error(f'nvidia-smi command NOT found! NVIDIA drivers are not installed properly... {str(FnFE)}')
+    
+    except Exception as E:
+        logging.error(f'An unexpected error occurred while checking NVIDIA SMI: {str(E)}')
 
 def checkTF() -> None:
     """
@@ -80,7 +105,7 @@ def checkTF() -> None:
     except Exception as E:
         logging.error(f'An unexpected error occured! {str(E)}')
 
-def checkPyTorch() -> None:
+def checkTorch() -> None:
     """
     Checks the installation of PyTorch and CUDA configuration.
     Imports PyTorch and checks the available CUDA devices.
@@ -109,14 +134,39 @@ def checkPyTorch() -> None:
         logging.error(f'An unexpected error occured! {str(E)}')
 
 def main() -> None:
-    logging.info(f'Starting CUDA & TensorFlow Report.')
+    logging.info(f'Starting System Report.')
     
     checkCUDA()
     checkTF()
-    checkPyTorch()
+    checkTorch()
+    checkOpenCV()
 
     logging.info(f"Completed. Report has been created at '{LOG}'")
 
+def checkOpenCV() -> None:
+    """
+    Checks the installation of OpenCV and its access to the camera.
+    Imports OpenCV and attempts to access the camera.
+
+    Results are saved to the report.    
+    """
+    try:
+        import cv2  # type: ignore
+        CV2_VERSION: str = cv2.__version__
+        logging.info(f'OpenCV {CV2_VERSION} installed.')
+    
+        try:
+            capture = cv2.VideoCapture(0)
+            if capture.isOpened():
+                logging.info(f'OpenCV can access the camera: {capture.get(cv2.CAP_PROP_FPS)} FPS')
+            else:
+                logging.warning('OpenCV cannot access the camera.')
+            capture.release()
+        except Exception as E:
+            logging.error(f'An error occurred while checking OpenCV camera access: {str(E)}')
+
+    except ImportError as ImE:
+        logging.error(f'OpenCV is NOT installed. {str(ImE)}')
 
 if __name__ == '__main__':
     # Execute Checks

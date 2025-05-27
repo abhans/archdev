@@ -215,13 +215,13 @@ ENTRYPOINT ["/entrypoint.sh"]
 After pulling the image, it can be tested with:
 
 ```bash
-docker run --gpus all -it --rm "archlinux/latest:cuda"
+docker run --gpus all -it --rm "archlinux/latest:cuda" bash
 ```
 
 For a **localy-stored** image, remove `--rm` flag and specify a **name** for the container:
 
 ```bash
- docker run --gpus all -it --name <NAME> "archlinux/latest:cuda"
+docker run --gpus all -it --name <NAME> "archlinux/latest:cuda" bash
 ```
 
 ## Customizing Build Arguments
@@ -244,9 +244,11 @@ The whole process **takes quite a long time (over 30 min)** and the resulting im
 ## ToDos
 
 - [x] Explain the  cuDNN, cuFFT and cuBLAS situation. Understand how it's related to the topic.
-- [ ] Initialize `uv` to the `dev/` directory as a project
+- [ ] Initialize `uv` to the `.dev/` directory as a project
   - Read more about projects [[here]](https://docs.astral.sh/uv/concepts/projects/)
 - [ ] Find a better way to check system, done by `run.py`
+  - Added `checkTorch` to `run.py`
+- [ ] Properly set up OpenCV to connect the camera.
 
 ```bash
 uv init --bare --python 3.12 --no-cache -v
