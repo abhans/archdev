@@ -2,20 +2,12 @@ import os
 import logging
 import subprocess
 
-# Add CUDA to "PATH"
-if os.path.exists('/opt/cuda/bin'):
-    # Prepend '/opt/cuda/bin' to the "PATH" environment variable
-    #   This makes CUDA tools available in the system path for this process
-    os.environ["PATH"] = "/opt/cuda/bin:" + os.environ.get("PATH", "")
-
 # Suppress TensorFlow INFO, WARNING, and ERROR logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # Suppress absl logging (if used)
 os.environ["ABSL_LOG_LEVEL"] = "3"
 # Turn off oneDNN operations
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-# Set a custom directory for Matplotlib configuration files to avoid permission issues
-os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 # Restrict TensorFlow to only see the first GPU (GPU 0)
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
@@ -95,7 +87,7 @@ def checkTF() -> None:
             logging.info(f'GPUs detected: {len(DEVICES)} GPU(s)')
             for DEVICE in DEVICES:
                 details = tf.config.experimental.get_device_details(DEVICE)
-                logging.info(f':{details.get('device_name', 'Unknown Device')}')
+                logging.info(f':{details.get("device_name", "Unknown Device")}')
         # No GPU is detected
         else:
             logging.warning(f"TensorFlow DID NOT detect any GPUs!")
@@ -141,35 +133,9 @@ def main() -> None:
     checkSMI()
     checkTF()
     checkTorch()
-    # checkOpenCV()
 
     logging.info(f"Completed. Report has been created at '{LOG}'")
 
-# TODO: Resolve the connectivity issues with OpenCV
-# def checkOpenCV() -> None:
-#     """
-#     Checks the installation of OpenCV and its access to the camera.
-#     Imports OpenCV and attempts to access the camera.
-
-#     Results are saved to the report.    
-#     """
-#     try:
-#         import cv2  # type: ignore
-#         CV2_VERSION: str = cv2.__version__
-#         logging.info(f'OpenCV {CV2_VERSION} installed.')
-    
-#         try:
-#             capture = cv2.VideoCapture(0)
-#             if capture.isOpened():
-#                 logging.info(f'OpenCV can access the camera: {capture.get(cv2.CAP_PROP_FPS)} FPS')
-#             else:
-#                 logging.warning('OpenCV cannot access the camera.')
-#             capture.release()
-#         except Exception as E:
-#             logging.error(f'An error occurred while checking OpenCV camera access: {str(E)}')
-
-#     except ImportError as ImE:
-#         logging.error(f'OpenCV is NOT installed. {str(ImE)}')
 
 if __name__ == '__main__':
     # Execute Checks

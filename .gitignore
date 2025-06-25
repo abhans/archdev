@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Stupid Microsoft folder that gets created
+
 # C extensions
 *.so
 

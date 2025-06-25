@@ -22,3 +22,5 @@
 **/values.dev.yaml
 .git
 __pycache__
+*.pyc
+*.pyo
