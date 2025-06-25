@@ -237,7 +237,7 @@ docker run --gpus all -it --name <NAME> "archlinux/latest:cuda" bash
 
 You can customize the Docker image by altering the build arguments defined in the `Dockerfile`. For example, you can change the default username, user ID, or group ID to fit your preferences or environment.
 
-To specify custom values during the build process, use the `--build-arg` flag with `docker build`. 
+To specify custom values during the build process, use the `--build-arg` flag with `docker build`.
 
 For example:
 
