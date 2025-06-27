@@ -10,12 +10,12 @@ It also comes with the `uv` **package manager** with a virtual environment setup
 
 This setup consists of 6 main steps:
 
-1. Setting Up the Build Arguments
-2. Initialization of Arch Linux
-3. Configuration of the User
-4. Installation of Packages
-5. Setting up CUDA & Drivers
-6. Setting Up the Environment
+1. **Setting Up the Build Arguments**
+2. **Initialization of Arch Linux**
+3. **Configuration of the User**
+4. **Installation of Packages**
+5. **Setting up CUDA & Drivers**
+6. **Setting Up the Environment**
 
 ### 1. Setting Up the Build Arguments
 
@@ -30,7 +30,7 @@ The latest `archlinux` image is utilized as the base image:
 FROM archlinux:latest
 ```
 
-> It can be pinned with it's digest, which is exposed with:
+> It can be pinned with its digest, which is exposed with:
 >
 > ```pwsh
 > docker pull archlinux:latest
@@ -46,7 +46,7 @@ To simplify the rest of the building process, build arguments are created. This 
 #   This is useful for avoiding permission issues when mounting volumes
 
 ARG USER=<USERNAME>
-ARG GUID=<GROUP ID>
+ARG GUID=<GROUP_ID>
 ARG UID=${GUID}
 # Environment variables
 ENV HOME=/home/${USER}
@@ -72,7 +72,7 @@ USER root
 
 # Initialize Arch Linux
 RUN pacman-key --init \
-    && pacman -Sy --noconfirm sudo \ 
+    && pacman -Sy --noconfirm sudo \
     && pacman-key --populate archlinux \
     && pacman --noconfirm -Syu \
     # Generate en_US.UTF-8 locale
@@ -85,7 +85,7 @@ RUN pacman-key --init \
 
 ### 3. Configuration of the User
 
-A new user is created, using the build arguments. The "home" directory is created and its' permissions are configured:
+A new user is created, using the build arguments. The "home" directory is created and its permissions are configured:
 
 > Created user is also set as a "sudoer".
 
@@ -109,7 +109,7 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
 
 ### 4. Installation of Packages
 
-CUDA, drivers and other related packages (e.g. fatsfetch, openssh, git, curl etc.) are installed. For managing Python, `uv` package manager is installed:
+CUDA, drivers and other related packages (e.g. fastfetch, openssh, git, curl etc.) are installed. For managing Python, `uv` package manager is installed:
 
 ```Dockerfile
 # ------------------------ INSTALLATION (Python & Packages) ------------------------
@@ -176,7 +176,7 @@ Finally, the Python environment is set up and libraries including PyTorch, Tenso
 ```Dockerfile
 # ------------------------ ENVIRONMENT ------------------------
 # Sets up the environment for the container
-#  This includes setting a virtual environment, downlaoding packages, copying entrypoint scripts, and fixing permissions
+#  This includes setting a virtual environment, downloading packages, copying entrypoint scripts, and fixing permissions
 
 # Set the locale to UTF-8
 ENV LANG=en_US.UTF-8
@@ -207,7 +207,7 @@ RUN uv python install 3.12 \
     && uv cache clean
 ```
 
-> An etrypoint script `entrypoint.sh` is provided and used at startup. This script includes environment activation and runs the report `.py` script.
+> An entrypoint script `entrypoint.sh` is provided and used at startup. This script includes environment activation and runs the report `.py` script.
 >
 > ```Dockerfile
 > # Fetching System information
