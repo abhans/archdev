@@ -42,6 +42,7 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
     && usermod -aG wheel ${USER} \
     # Setting the user as a "sudoer"
     && sed -i 's/^# %wheel/%wheel/' /etc/sudoers \
+    && mkdir -p /home/${USER}/.local \
     # Fix permissions for the home directory
     && chown -R ${USER}:${USER} /home/${USER}
 
@@ -68,7 +69,7 @@ ENV PATH="/home/${USER}/.local/bin:${PATH}"
 # Add the CUDA folders to the PATH
 #   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
-ENV LD_LIBRARY_PATH=/opt/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+ENV LD_LIBRARY_PATH=/opt/cuda/lib64
 # Configure the Matplotlib temporary directory
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
@@ -84,10 +85,10 @@ ENV LANGUAGE=en_US.UTF-8
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Copy project files to the home directory
-COPY . ${DEV}
-
 USER ${USER}
+
+# Copy project files to the home directory
+COPY --chown=${USER}:${USER} . ${DEV}
 WORKDIR ${DEV}
 
 # Install Python 3.12 and create a virtual environment
@@ -100,7 +101,7 @@ RUN uv python install 3.12 \
     && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
     && uv pip install --no-cache-dir -r requirements.txt \
     # Save the installed packages to a lock file
-    && uv pip compile requirements.txt --output uv.lock \
+    && uv pip compile requirements.txt -o uv.lock \
     # Clean uv cache
     && uv cache clean
 
