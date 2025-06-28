@@ -29,7 +29,7 @@ USER root
 
 # Initialize Arch Linux
 RUN pacman-key --init \
-    && pacman -Sy --noconfirm sudo \ 
+    && pacman -Sy --noconfirm sudo \
     && pacman-key --populate archlinux \
     && pacman --noconfirm -Syu \
     # Generate en_US.UTF-8 locale
@@ -51,9 +51,8 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
 #  This installs essential development tools such as Git, GCC, Make, and CMake
 
 # Install essentials, CUDA and "uv" package manager
-RUN pacman -Sy --noconfirm cmake gcc make fastfetch openssh unzip sudo curl git vi nvim \
-    && pacman -S --noconfirm nvidia cuda cuda-toolkit \
-    && pacman -S --noconfirm nvidia-container-toolkit docker opencl-nvidia \
+RUN pacman -Sy --noconfirm cmake gcc make fastfetch openssh unzip curl git vi nvim \
+    && pacman -S --noconfirm nvidia nvidia-container-toolkit docker opencl-nvidia\
     # Install the "uv" package manager
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && pacman -Scc --noconfirm
