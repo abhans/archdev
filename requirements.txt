@@ -1,4 +1,4 @@
-tensorflow[and-cuda]==2.16.2      # Resolve cuDNN, cuFFT, and cuBLAS Errors #62075 | https://github.com/tensorflow/tensorflow/issues/62075 : https://github.com/tensorflow/tensorflow/issues/62075#issuecomment-2882942768
+tensorflow[and-cuda]==2.16.2      # Resolve cuDNN, cuFFT, and cuBLAS Errors #62075 | https://github.com/tensorflow/tensorflow/issues/62075#issuecomment-2882942768
 pandas
 polars
 matplotlib        # Weird Errors (Can be downloaded later by the user)
