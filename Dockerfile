@@ -50,16 +50,11 @@ RUN useradd --create-home --shell /bin/bash ${USER} \
 # Install base development tools
 #  This installs essential development tools such as Git, GCC, Make, and CMake
 
-# Install essentials, CUDA and "uv" package manager
+# Install essentials and CUDA
 RUN pacman -Sy --noconfirm cmake gcc make fastfetch openssh unzip curl git vi nvim \
-    && pacman -S --noconfirm nvidia nvidia-container-toolkit docker opencl-nvidia\
-    # Install the "uv" package manager
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && pacman -Sy --noconfirm nvidia cuda cudnn cuda-toolkit \
+    && pacman -S --noconfirm nvidia-container-toolkit opencl-nvidia \
     && pacman -Scc --noconfirm
-
-# Append ".local/bin" to PATH
-#   This ensures that binaries installed by `uv` (such as Python) are available "system-wide"
-ENV PATH="/home/${USER}/.local/bin:${PATH}"
 
 # ------------------------ CUDA CONFIGURATION ------------------------
 # Configure CUDA for the container
@@ -68,7 +63,7 @@ ENV PATH="/home/${USER}/.local/bin:${PATH}"
 # Add the CUDA folders to the PATH
 #   Adds CUDA binaries and libraries to environment variables
 ENV PATH=/opt/cuda/bin${PATH:+:${PATH}}
-ENV LD_LIBRARY_PATH=/opt/cuda/lib64
+ENV LD_LIBRARY_PATH=/usr/lib:/opt/cuda/lib64
 # Configure the Matplotlib temporary directory
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
@@ -90,14 +85,19 @@ USER ${USER}
 COPY --chown=${USER}:${USER} . ${DEV}
 WORKDIR ${DEV}
 
-# Install Python 3.12 and create a virtual environment
-RUN uv python install 3.12 \
+# Append ".local/bin" to PATH
+#   This ensures that binaries installed by `uv` (such as Python) are available "system-wide"
+ENV PATH="/home/${USER}/.local/bin:${PATH}"
+
+# Install the "uv" package manager, Python 3.12 and create a virtual environment
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && uv python install 3.12 \
     && uv venv --python 3.12 ${VENV_DIR} \
     && source ${VENV_DIR}/bin/activate \
     # Initialize a `uv` project (base)
     && uv init --bare --python 3.12 -v -n base \
     && uv pip install --upgrade pip \
-    && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 \
+    && uv pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126 \
     && uv pip install --no-cache-dir -r requirements.txt \
     # Save the installed packages to a lock file
     && uv pip compile requirements.txt -o uv.lock \

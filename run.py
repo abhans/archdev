@@ -51,9 +51,11 @@ def checkSMI() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking NVIDIA SMI installation.")
+    logging.info("Checking NVIDIA SMI installation.")
     try:
         smiRes = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
+        driverRes = subprocess.run(['nvidia-smi', '--query-gpu=driver_version,product_name', '--format=csv,noheader'], stdout=subprocess.PIPE, text=True)
+        logging.info(f"Driver:\n{driverRes.stdout}")
         
         if smiRes.returncode == 0:
             logging.info(f"{smiRes.stdout}")
@@ -111,7 +113,7 @@ def checkTorch() -> None:
         import torch    # type: ignore
 
         PT_VERSION: str = torch.__version__
-        logging.info(f'PyTorch {PT_VERSION} installed.')
+        logging.info(f'PyTorch {PT_VERSION}::{torch.version.cuda} installed.')
 
         if torch.cuda.is_available():
             logging.info(f'GPUs detected: {torch.cuda.device_count()} GPU(s)')
