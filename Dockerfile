@@ -84,6 +84,13 @@ ENV LANGUAGE=en_US.UTF-8
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Copy Oh-My-Posh theme
+COPY theme.omp.json /home/${USER}/bin/theme.omp.json
+
+# Installation & setup of Oh-My-Posh
+RUN curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/bin \
+    && echo 'eval "$(oh-my-posh init bash --config /home/${USER}/bin/theme.omp.json.json)"' >> /home/${USER}/.bashrc
+
 USER ${USER}
 
 # Copy project files to the home directory
