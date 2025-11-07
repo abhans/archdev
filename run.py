@@ -2,20 +2,12 @@ import os
 import logging
 import subprocess
 
-# Add CUDA to "PATH"
-if os.path.exists('/opt/cuda/bin'):
-    # Prepend '/opt/cuda/bin' to the "PATH" environment variable
-    #   This makes CUDA tools available in the system path for this process
-    os.environ["PATH"] = "/opt/cuda/bin:" + os.environ.get("PATH", "")
-
 # Suppress TensorFlow INFO, WARNING, and ERROR logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # Suppress absl logging (if used)
 os.environ["ABSL_LOG_LEVEL"] = "3"
 # Turn off oneDNN operations
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-# Set a custom directory for Matplotlib configuration files to avoid permission issues
-os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 # Restrict TensorFlow to only see the first GPU (GPU 0)
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
@@ -36,7 +28,7 @@ def checkCUDA() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking CUDA installation.")
+    logging.info("Checking CUDA installation.")
     try:
         nvccRes = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
         
@@ -59,9 +51,11 @@ def checkSMI() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking NVIDIA SMI installation.")
+    logging.info("Checking NVIDIA SMI installation.")
     try:
         smiRes = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
+        driverRes = subprocess.run(['nvidia-smi', '--query-gpu=driver_version', '--format=csv,noheader'], stdout=subprocess.PIPE, text=True)
+        logging.info(f"Driver:{driverRes.stdout}")
         
         if smiRes.returncode == 0:
             logging.info(f"{smiRes.stdout}")
@@ -81,7 +75,7 @@ def checkTF() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking TensorFlow installation.")
+    logging.info("Checking TensorFlow installation.")
 
     try:
         import tensorflow as tf      # type: ignore
@@ -95,10 +89,10 @@ def checkTF() -> None:
             logging.info(f'GPUs detected: {len(DEVICES)} GPU(s)')
             for DEVICE in DEVICES:
                 details = tf.config.experimental.get_device_details(DEVICE)
-                logging.info(f':{details.get('device_name', 'Unknown Device')}')
+                logging.info(f':{details.get("device_name", "Unknown Device")}')
         # No GPU is detected
         else:
-            logging.warning(f"TensorFlow DID NOT detect any GPUs!")
+            logging.warning("TensorFlow DID NOT detect any GPUs!")
 
     except ImportError as ImE:
         logging.error(f'TensorFlow is NOT installed. {str(ImE)}')
@@ -113,20 +107,20 @@ def checkTorch() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking PyTorch installation.")
+    logging.info("Checking PyTorch installation.")
 
     try:
         import torch    # type: ignore
 
         PT_VERSION: str = torch.__version__
-        logging.info(f'PyTorch {PT_VERSION} installed.')
+        logging.info(f'PyTorch {PT_VERSION}::{torch.version.cuda} installed.')
 
         if torch.cuda.is_available():
             logging.info(f'GPUs detected: {torch.cuda.device_count()} GPU(s)')
             for i in range(torch.cuda.device_count()):
                 logging.info(f':{torch.cuda.get_device_name(i)}')
         else:
-            logging.warning(f"PyTorch DID NOT detect any GPUs!")
+            logging.warning("PyTorch DID NOT detect any GPUs!")
 
     except ImportError as ImE:
         logging.error(f'PyTorch is NOT installed. {str(ImE)}')
@@ -135,41 +129,15 @@ def checkTorch() -> None:
         logging.error(f'An unexpected error occured! {str(E)}')
 
 def main() -> None:
-    logging.info(f'Starting System Report.')
+    logging.info('Starting System Report.')
     
     checkCUDA()
     checkSMI()
     checkTF()
     checkTorch()
-    # checkOpenCV()
 
     logging.info(f"Completed. Report has been created at '{LOG}'")
 
-# TODO: Resolve the connectivity issues with OpenCV
-# def checkOpenCV() -> None:
-#     """
-#     Checks the installation of OpenCV and its access to the camera.
-#     Imports OpenCV and attempts to access the camera.
-
-#     Results are saved to the report.    
-#     """
-#     try:
-#         import cv2  # type: ignore
-#         CV2_VERSION: str = cv2.__version__
-#         logging.info(f'OpenCV {CV2_VERSION} installed.')
-    
-#         try:
-#             capture = cv2.VideoCapture(0)
-#             if capture.isOpened():
-#                 logging.info(f'OpenCV can access the camera: {capture.get(cv2.CAP_PROP_FPS)} FPS')
-#             else:
-#                 logging.warning('OpenCV cannot access the camera.')
-#             capture.release()
-#         except Exception as E:
-#             logging.error(f'An error occurred while checking OpenCV camera access: {str(E)}')
-
-#     except ImportError as ImE:
-#         logging.error(f'OpenCV is NOT installed. {str(ImE)}')
 
 if __name__ == '__main__':
     # Execute Checks

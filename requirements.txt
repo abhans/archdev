@@ -1,11 +1,15 @@
-tf-nightly     # TODO: Check for unnecessary logging clutter
+tensorflow[and-cuda]==2.16.2      # Resolve cuDNN, cuFFT, and cuBLAS Errors #62075 | https://github.com/tensorflow/tensorflow/issues/62075#issuecomment-2882942768
+pydantic
+mlflow
+wandb
 pandas
 polars
-# matplotlib        # Weird Errors (Can be downloaded later by the user)
+matplotlib
 plotly
 ipykernel
 pillow
 opencv-python
 PyQt5
 Flask
+grpcio==1.60.1      # Resolve "All log messages before absl::InitializeLog() is called are written to STDERR"
 protobuf<4.21       # Resolves AttributeError: 'MessageFactory' object has no attribute 'GetPrototype'

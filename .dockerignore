@@ -20,5 +20,5 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-.git
 __pycache__
+*.pyo
