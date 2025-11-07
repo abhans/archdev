@@ -28,7 +28,7 @@ def checkCUDA() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking CUDA installation.")
+    logging.info("Checking CUDA installation.")
     try:
         nvccRes = subprocess.run(['nvcc', '--version'], stdout=subprocess.PIPE, text=True)
         
@@ -54,8 +54,8 @@ def checkSMI() -> None:
     logging.info("Checking NVIDIA SMI installation.")
     try:
         smiRes = subprocess.run(['nvidia-smi'], stdout=subprocess.PIPE, text=True)
-        driverRes = subprocess.run(['nvidia-smi', '--query-gpu=driver_version,product_name', '--format=csv,noheader'], stdout=subprocess.PIPE, text=True)
-        logging.info(f"Driver:\n{driverRes.stdout}")
+        driverRes = subprocess.run(['nvidia-smi', '--query-gpu=driver_version', '--format=csv,noheader'], stdout=subprocess.PIPE, text=True)
+        logging.info(f"Driver:{driverRes.stdout}")
         
         if smiRes.returncode == 0:
             logging.info(f"{smiRes.stdout}")
@@ -75,7 +75,7 @@ def checkTF() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking TensorFlow installation.")
+    logging.info("Checking TensorFlow installation.")
 
     try:
         import tensorflow as tf      # type: ignore
@@ -92,7 +92,7 @@ def checkTF() -> None:
                 logging.info(f':{details.get("device_name", "Unknown Device")}')
         # No GPU is detected
         else:
-            logging.warning(f"TensorFlow DID NOT detect any GPUs!")
+            logging.warning("TensorFlow DID NOT detect any GPUs!")
 
     except ImportError as ImE:
         logging.error(f'TensorFlow is NOT installed. {str(ImE)}')
@@ -107,7 +107,7 @@ def checkTorch() -> None:
 
     Results are saved to the report.
     """
-    logging.info(f"Checking PyTorch installation.")
+    logging.info("Checking PyTorch installation.")
 
     try:
         import torch    # type: ignore
@@ -120,7 +120,7 @@ def checkTorch() -> None:
             for i in range(torch.cuda.device_count()):
                 logging.info(f':{torch.cuda.get_device_name(i)}')
         else:
-            logging.warning(f"PyTorch DID NOT detect any GPUs!")
+            logging.warning("PyTorch DID NOT detect any GPUs!")
 
     except ImportError as ImE:
         logging.error(f'PyTorch is NOT installed. {str(ImE)}')
@@ -129,7 +129,7 @@ def checkTorch() -> None:
         logging.error(f'An unexpected error occured! {str(E)}')
 
 def main() -> None:
-    logging.info(f'Starting System Report.')
+    logging.info('Starting System Report.')
     
     checkCUDA()
     checkSMI()
